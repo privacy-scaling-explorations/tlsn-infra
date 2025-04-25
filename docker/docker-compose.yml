@@ -1,0 +1,75 @@
+services:
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--log.level=TRACE"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.defaultRule=Host(`notary-drill.pse.dev`) && PathPrefix(`/{{ normalize (index .Labels \"com.docker.compose.service\") }}`)"
+      - "--entrypoints.web.address=:80"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+  websockify:
+    container_name: websockify-proxy
+    image: jwnmulder/websockify:0.12
+    restart: unless-stopped
+    volumes:
+      - "./websockify/websockify_config:/app/websockify_config"
+    ports:
+      - "55688:80"
+    command: [ "80", "--target-config", "/app/websockify_config" ]
+  nightly:
+    container_name: nightly
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.stripnightly.stripprefix.prefixes=/nightly"
+      - "traefik.http.routers.nightly.middlewares=stripnightly" 
+    image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:dev
+    restart: unless-stopped
+    devices:
+      - /dev/sgx_enclave
+      - /dev/sgx_provision
+    volumes:
+      - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+    ports:
+      - "3333:7047"
+    entrypoint: [ "gramine-sgx", "notary-server" ]
+  alpha9:
+    container_name: alpha9
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.stripalpha9.stripprefix.prefixes=/alpha9"
+      - "traefik.http.routers.alpha9.middlewares=stripalpha9" 
+    image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.9
+    restart: unless-stopped
+    devices:
+      - /dev/sgx_enclave
+      - /dev/sgx_provision
+    volumes:
+      - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+    ports:
+      - "4009:7047"
+    entrypoint: [ "gramine-sgx", "notary-server" ]
+  alpha8:
+    container_name: alpha8
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/alpha8"
+      - "traefik.http.routers.alpha8.middlewares=stripalpha8" 
+    image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.8
+    restart: unless-stopped
+    devices:
+      - /dev/sgx_enclave
+      - /dev/sgx_provision
+    volumes:
+      - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+    ports:
+      - "4008:7047"
+    entrypoint: [ "gramine-sgx", "notary-server" ]
