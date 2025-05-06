@@ -1,0 +1,164 @@
+name: TLSNotary Deploy (Backend + Frontend)
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_group_name:
+        description: "Name of the Azure Resource Group"
+        default: "PSE_TLSNotary"
+        required: true
+        type: string
+      backend_env:
+        description: "Environment tag for backend VM (prod or test)"
+        default: "test"
+        required: true
+        type: string
+      frontend_env:
+        description: "Environment tag for frontend VM (prod or test)"
+        default: "test"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if not on main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "This workflow can only be run from the main branch."
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      #######################################
+      # BACKEND VM
+      #######################################
+
+      - name: Find Backend VM
+        id: find-backend-vm
+        run: |
+          RESOURCE_GROUP="${{ inputs.resource_group_name }}"
+          ENV="${{ inputs.backend_env }}"
+          QUERY="[?tags.env=='$ENV' && tags.role=='backend'].name"
+          VM_NAME=$(az vm list --resource-group "$RESOURCE_GROUP" --query "$QUERY" -o tsv | head -n 1)
+
+          if [ -z "$VM_NAME" ]; then
+            echo "No Backend VM found for env=$ENV and role=backend"
+            exit 1
+          fi
+
+          echo "BACKEND_VM_NAME=$VM_NAME" >> $GITHUB_ENV
+          echo "Matched Backend VM: $VM_NAME"
+
+      - name: Deploy Compose to Backend VM
+        if: env.BACKEND_VM_NAME != ''
+        run: |
+          az vm run-command create \
+            --name "backend-${{ github.run_id }}" \
+            --vm-name "$BACKEND_VM_NAME" \
+            --resource-group "${{ inputs.resource_group_name }}" \
+            --script "bash -c '
+              set -euo pipefail
+              rm -rf /var/tmp/tlsn-infra
+              cd /home/azureuser/notaries
+              docker compose -f docker-compose.yml down || true
+              rm -rf *
+              git clone https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
+              cp -rp /var/tmp/tlsn-infra/docker/* .
+              docker compose -f docker-compose.yml up -d
+            '" 
+
+          OUTPUT=$(az vm run-command show \
+            --name "backend-${{ github.run_id }}" \
+            --vm-name "$BACKEND_VM_NAME" \
+            --resource-group "${{ inputs.resource_group_name }}" \
+            --expand instanceView)
+
+          echo "Backend VM output:"
+          jq -r .instanceView.error <<<$OUTPUT
+
+          EXIT_CODE=$(jq -r '.instanceView.exitCode' <<<$OUTPUT)
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Backend VM script failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+      - name: Clear AZ Run Command Execution
+        if: always() && env.BACKEND_VM_NAME != ''
+        run: |
+          az vm run-command delete \
+            --name "backend-${{ github.run_id }}" \
+            --vm-name "$BACKEND_VM_NAME" \
+            --resource-group "${{ inputs.resource_group_name }}" \
+            --yes
+
+      #######################################
+      # FRONTEND VM
+      #######################################
+
+      - name: Find Frontend VM
+        id: find-frontend-vm
+        run: |
+          RESOURCE_GROUP="${{ inputs.resource_group_name }}"
+          ENV="${{ inputs.frontend_env }}"
+          QUERY="[?tags.env=='$ENV' && tags.role=='frontend'].name"
+          VM_NAME=$(az vm list --resource-group "$RESOURCE_GROUP" --query "$QUERY" -o tsv | head -n 1)
+
+          if [ -z "$VM_NAME" ]; then
+            echo "No Frontend VM found for env=$ENV and role=frontend"
+            exit 1
+          fi
+
+          echo "FRONTEND_VM_NAME=$VM_NAME" >> $GITHUB_ENV
+          echo "Matched Frontend VM: $VM_NAME"
+
+      - name: Deploy landing page
+        if: env.FRONTEND_VM_NAME != ''
+        run: |
+         az vm run-command create \
+           --name "frontend-${{ github.run_id }}" \
+           --vm-name "$FRONTEND_VM_NAME" \
+           --resource-group "${{ inputs.resource_group_name }}" \
+           --script "bash -c '
+             set -euo pipefail
+             rm -rf /var/tmp/tlsn-infra
+             git clone https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
+             cp /var/tmp/tlsn-infra/proxy/index.html /var/www/html/
+           '" 
+
+         OUTPUT=$(az vm run-command show \
+           --name "frontend-${{ github.run_id }}" \
+           --vm-name "$FRONTEND_VM_NAME" \
+           --resource-group "${{ inputs.resource_group_name }}" \
+           --expand instanceView)
+
+         echo "Frontend VM output:"
+         jq -r .instanceView.error <<<$OUTPUT
+
+         EXIT_CODE=$(jq -r '.instanceView.exitCode' <<<$OUTPUT)
+         if [ "$EXIT_CODE" != "0" ]; then
+           echo "Frontend VM script failed with exit code $EXIT_CODE"
+           exit 1
+         fi
+
+      - name: Clear AZ Run Command Execution
+        if: always() && env.FRONTEND_VM_NAME != ''
+        run: |
+          az vm run-command delete \
+            --name "frontend-${{ github.run_id }}" \
+            --vm-name "$FRONTEND_VM_NAME" \
+            --resource-group "${{ inputs.resource_group_name }}" \
+            --yes
