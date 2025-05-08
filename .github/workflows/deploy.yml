@@ -8,16 +8,14 @@ on:
         default: "PSE_TLSNotary"
         required: true
         type: string
-      backend_env:
-        description: "Environment tag for backend VM (prod or test)"
-        default: "test"
+      env:
+        description: "Deployment environment (prod or test)"
         required: true
-        type: string
-      frontend_env:
-        description: "Environment tag for frontend VM (prod or test)"
         default: "test"
-        required: true
-        type: string
+        type: choice
+        options:
+          - prod
+          - test
 
 permissions:
   id-token: write
@@ -43,6 +41,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Validate environment and branch constraints
+        run: |
+          if [[ "${{ inputs.env }}" == "prod" && "${{ github.ref_name }}" != "main" ]]; then
+            echo "Deployment to 'prod' is only allowed from the main branch."
+            exit 1
+          fi
+          echo "Environment and branch check passed."
+
       #######################################
       # BACKEND VM
       #######################################
@@ -51,7 +57,7 @@ jobs:
         id: find-backend-vm
         run: |
           RESOURCE_GROUP="${{ inputs.resource_group_name }}"
-          ENV="${{ inputs.backend_env }}"
+          ENV="${{ inputs.env }}"
           QUERY="[?tags.env=='$ENV' && tags.role=='backend'].name"
           VM_NAME=$(az vm list --resource-group "$RESOURCE_GROUP" --query "$QUERY" -o tsv | head -n 1)
 
@@ -113,7 +119,7 @@ jobs:
         id: find-frontend-vm
         run: |
           RESOURCE_GROUP="${{ inputs.resource_group_name }}"
-          ENV="${{ inputs.frontend_env }}"
+          ENV="${{ inputs.env }}"
           QUERY="[?tags.env=='$ENV' && tags.role=='frontend'].name"
           VM_NAME=$(az vm list --resource-group "$RESOURCE_GROUP" --query "$QUERY" -o tsv | head -n 1)
 
