@@ -15,6 +15,8 @@ TAGS=($(yq e '.services | keys | .[]' "$COMPOSE_FILE"))
 echo "Extracted tags from docker-compose: ${TAGS[*]}"
 echo "Downloading secrets from Key Vault: $VAULT_NAME"
 
+az login --identity
+
 for TAG in "${TAGS[@]}"; do
   echo "Checking secrets for tag: $TAG"
 
