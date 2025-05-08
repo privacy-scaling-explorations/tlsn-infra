@@ -84,6 +84,7 @@ jobs:
               rm -rf *
               git clone https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
               cp -rp /var/tmp/tlsn-infra/docker/* .
+              ./fetch-fixtures.sh
               docker compose -f docker-compose.yml up -d
             '" 
 
