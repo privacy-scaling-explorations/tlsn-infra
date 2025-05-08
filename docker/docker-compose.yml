@@ -1,21 +1,4 @@
 services:
-  traefik:
-    image: traefik:v2.9
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      - "--log.level=TRACE"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.defaultRule=Host(`notary-drill.pse.dev`) && PathPrefix(`/{{ normalize (index .Labels \"com.docker.compose.service\") }}`)"
-      - "--entrypoints.web.address=:80"
-      - "--api.insecure=true"
-      - "--api.dashboard=true"
-    ports:
-      - "80:80"
-      - "8080:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
   websockify:
     container_name: websockify-proxy
     image: jwnmulder/websockify:0.12
@@ -27,10 +10,6 @@ services:
     command: [ "80", "--target-config", "/app/websockify_config" ]
   nightly:
     container_name: nightly
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.stripnightly.stripprefix.prefixes=/nightly"
-      - "traefik.http.routers.nightly.middlewares=stripnightly" 
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:dev
     restart: unless-stopped
     devices:
@@ -38,15 +17,35 @@ services:
       - /dev/sgx_provision
     volumes:
       - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+      - ./nightly/config.yaml:/work/config/config.yaml:ro
     ports:
       - "3333:7047"
     entrypoint: [ "gramine-sgx", "notary-server" ]
-  alpha9:
-    container_name: alpha9
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha9.stripprefix.prefixes=/alpha9"
-      - "traefik.http.routers.alpha9.middlewares=stripalpha9" 
+  alpha10-sgx:
+    container_name: alpha10-sgx
+    image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.10
+    restart: unless-stopped
+    devices:
+      - /dev/sgx_enclave
+      - /dev/sgx_provision
+    volumes:
+      - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+      # workaround for https://github.com/tlsnotary/tlsn/pull/791
+      - ./alpha10-sgx/config.yaml:/work/config/config.yaml:ro
+    ports:
+      - "4110:7047"
+    entrypoint: [ "gramine-sgx", "notary-server" ]
+  alpha10:
+    container_name: alpha10
+    image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.10
+    restart: unless-stopped
+    volumes:
+      - "./alpha10/fixture:/root/.notary-server/fixture"
+      - "./alpha10/config:/root/.notary-server/config"
+    ports:
+      - "4010:7047"
+  alpha9-sgx:
+    container_name: alpha9-sgx
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.9
     restart: unless-stopped
     devices:
@@ -55,14 +54,19 @@ services:
     volumes:
       - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
     ports:
-      - "4009:7047"
+      - "4109:7047"
     entrypoint: [ "gramine-sgx", "notary-server" ]
+  alpha9:
+    container_name: alpha9
+    image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.9
+    restart: unless-stopped
+    volumes:
+      - "./alpha9/fixture:/root/.notary-server/fixture"
+      - "./alpha9/config:/root/.notary-server/config"
+    ports:
+      - "4009:7047"
   alpha8:
     container_name: alpha8
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/alpha8"
-      - "traefik.http.routers.alpha8.middlewares=stripalpha8" 
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.8
     restart: unless-stopped
     devices:
@@ -73,3 +77,21 @@ services:
     ports:
       - "4008:7047"
     entrypoint: [ "gramine-sgx", "notary-server" ]
+  alpha7:
+    container_name: alpha7
+    image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.7
+    restart: unless-stopped
+    volumes:
+      - "./alpha7/fixture:/root/.notary-server/fixture"
+      - "./alpha7/config:/root/.notary-server/config"
+    ports:
+      - "4007:7047"
+  alpha6:
+    container_name: alpha6
+    image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.6
+    restart: unless-stopped
+    volumes:
+      - "./alpha6/fixture:/root/.notary-server/fixture"
+      - "./alpha6/config:/root/.notary-server/config"
+    ports:
+      - "4001:7047"
