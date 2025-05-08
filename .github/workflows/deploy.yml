@@ -25,12 +25,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Fail if not on main
-        if: github.ref != 'refs/heads/main'
-        run: |
-          echo "This workflow can only be run from the main branch."
-          exit 1
-
       - name: Checkout repository
         uses: actions/checkout@v3
 
