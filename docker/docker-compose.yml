@@ -106,7 +106,7 @@ services:
     container_name: alpha10-sgx
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha10-sgx.stripprefix.prefixes=[/alpha10-sgx]"
+      - "traefik.http.middlewares.stripalpha10-sgx.stripprefix.prefixes=/alpha10-sgx"
       - "traefik.http.routers.alpha10-sgx.middlewares=stripalpha10-sgx" 
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.10
     restart: unless-stopped
@@ -125,7 +125,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.stripalpha10.stripprefix.prefixes=/alpha10"
-      - "traefik.http.routers.alpha8.middlewares=stripalpha10" 
+      - "traefik.http.routers.alpha10.middlewares=stripalpha10" 
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.10
     restart: unless-stopped
     volumes:
@@ -137,7 +137,7 @@ services:
     container_name: alpha9-sgx
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha9-sgx.stripprefix.prefixes=[/alpha9-sgx]"
+      - "traefik.http.middlewares.stripalpha9-sgx.stripprefix.prefixes=/alpha9-sgx"
       - "traefik.http.routers.alpha9-sgx.middlewares=stripalpha9-sgx" 
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.9
     restart: unless-stopped
