@@ -21,6 +21,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  SOURCE_BRANCH: ${{ github.ref_name }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -76,7 +79,10 @@ jobs:
               cd /home/azureuser/notaries
               docker compose -f docker-compose.yml down || true
               rm -rf *
-              git clone https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
+
+              BRANCH=\"${{ env.SOURCE_BRANCH }}\"
+              echo \"Using branch: \$BRANCH\"
+              git clone --branch \$BRANCH https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
               cp -rp /var/tmp/tlsn-infra/docker/* .
               ./fetch-fixtures.sh
               docker compose -f docker-compose.yml up -d
