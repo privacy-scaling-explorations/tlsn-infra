@@ -80,7 +80,7 @@ services:
     container_name: alpha7
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/alpha8"
+      - "traefik.http.middlewares.stripalpha7.stripprefix.prefixes=/alpha7"
       - "traefik.http.routers.alpha8.middlewares=stripalpha7" 
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.7
     restart: unless-stopped
@@ -93,7 +93,7 @@ services:
     container_name: alpha6
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/alpha8"
+      - "traefik.http.middlewares.stripalpha6.stripprefix.prefixes=/alpha6"
       - "traefik.http.routers.alpha8.middlewares=stripalpha6" 
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.6
     restart: unless-stopped
@@ -106,8 +106,8 @@ services:
     container_name: alpha10-sgx
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/alpha8"
-      - "traefik.http.routers.alpha8.middlewares=stripalpha10-sgx" 
+      - "traefik.http.middlewares.stripalpha10sgx.stripprefix.prefixes=/alpha10-sgx"
+      - "traefik.http.routers.alpha8.middlewares=stripalpha10sgx" 
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.10
     restart: unless-stopped
     devices:
@@ -122,10 +122,8 @@ services:
     entrypoint: [ "gramine-sgx", "notary-server" ]
   alpha10:
     container_name: alpha10
-    alpha10-sgx:
-    container_name: alpha10-sgx
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/alpha8"
+      - "traefik.http.middlewares.stripalpha10.stripprefix.prefixes=/alpha1o
       - "traefik.http.routers.alpha8.middlewares=stripalpha10" 
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.10
     restart: unless-stopped
@@ -136,10 +134,8 @@ services:
       - "4010:7047"
   alpha9-sgx:
     container_name: alpha9-sgx
-    alpha10-sgx:
-    container_name: alpha10-sgx
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/alpha8"
+      - "traefik.http.middlewares.stripalpha9sgx.stripprefix.prefixes=/alpha9-sgx"
       - "traefik.http.routers.alpha8.middlewares=stripalpha9-sgx" 
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.9
     restart: unless-stopped
