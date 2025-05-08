@@ -16,6 +16,15 @@ on:
         options:
           - prod
           - test
+      deploy_target:
+        description: "Choose what to deploy"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - backend
+          - frontend
+          - both
 
 permissions:
   id-token: write
@@ -67,7 +76,7 @@ jobs:
           echo "Matched Backend VM: $VM_NAME"
 
       - name: Deploy Compose to Backend VM
-        if: env.BACKEND_VM_NAME != ''
+        if: env.BACKEND_VM_NAME != '' && (inputs.deploy_target == 'backend' || inputs.deploy_target == 'both')
         run: |
           az vm run-command create \
             --name "backend-${{ github.run_id }}" \
@@ -133,7 +142,7 @@ jobs:
           echo "Matched Frontend VM: $VM_NAME"
 
       - name: Deploy landing page
-        if: env.FRONTEND_VM_NAME != ''
+        if: env.FRONTEND_VM_NAME != '' && (inputs.deploy_target == 'frontend' || inputs.deploy_target == 'both')
         run: |
          az vm run-command create \
            --name "frontend-${{ github.run_id }}" \
