@@ -156,7 +156,7 @@ Once triggered:
 
 1. Runner performs `az login`
 2. Validates branch/environment match
-3. Identifies VMs in the resource group with matching tags (`role`, `end`)
+3. Identifies VMs in the resource group with matching tags (`role`, `env`)
 4. Executes `az vm run-command create` to:
    - For **backend**:
      - `docker compose down`
