@@ -148,7 +148,7 @@ Trigger the GitHub Actions workflow manually and supply:
 - The deployment role (backend/frontend/both)
 
 > Note: Federated identity tokens require exact subject matches.
-> Example: `repo:privacy-scaling-explorations/tlsn-infra:ref:refs/heads/main` will only work for the `main` branch.
+> Example: `repo:privacy-scaling-explorations/tlsn-infra:ref:refs/heads/main` will only work for the `main` branch.No wildcards supported yet.
 
 ### 5. What Happens During Deployment
 
