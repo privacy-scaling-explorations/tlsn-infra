@@ -125,8 +125,9 @@ services:
     container_name: alpha10
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.stripalpha10.stripprefix.prefixes=/alpha10"
+      - "traefik.http.routers.alpha10.rule=PathPrefix(`/v0.1.0-alpha10`)"
       - "traefik.http.routers.alpha10.middlewares=stripalpha10" 
+      - "traefik.http.middlewares.stripalpha10.stripprefix.prefixes=/v0.1.0-alpha10"
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.10
     restart: unless-stopped
     volumes:
