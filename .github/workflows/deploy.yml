@@ -94,7 +94,8 @@ jobs:
               git clone --branch \$BRANCH https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
               cp -rp /var/tmp/tlsn-infra/docker/* .
               ./fetch-fixtures.sh notaries-private-keys
-              docker compose -f docker-compose.yml up -d
+              docker compose pull
+              docker compose -f docker-compose.yml up -d --remove-orphans
             '" 
 
           OUTPUT=$(az vm run-command show \
