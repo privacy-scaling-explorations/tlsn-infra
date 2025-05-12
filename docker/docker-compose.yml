@@ -46,9 +46,9 @@ services:
     container_name: alpha9
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alpha9.rule=PathPrefix(`/v0.1.0-alpha9`)"
+      - "traefik.http.routers.alpha9.rule=PathPrefix(`/v0.1.0-alpha.9`)"
       - "traefik.http.routers.alpha9.middlewares=stripalpha9" 
-      - "traefik.http.middlewares.stripalpha9.stripprefix.prefixes=/v0.1.0-alpha9"
+      - "traefik.http.middlewares.stripalpha9.stripprefix.prefixes=/v0.1.0-alpha.9"
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.9
     restart: unless-stopped
     devices:
@@ -65,9 +65,9 @@ services:
     container_name: alpha8
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alpha8.rule=PathPrefix(`/v0.1.0-alpha8`)"
+      - "traefik.http.routers.alpha8.rule=PathPrefix(`/v0.1.0-alpha.8`)"
       - "traefik.http.routers.alpha8.middlewares=stripalpha8" 
-      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/v0.1.0-alpha8"
+      - "traefik.http.middlewares.stripalpha8.stripprefix.prefixes=/v0.1.0-alpha.8"
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.8
     restart: unless-stopped
     devices:
@@ -82,9 +82,9 @@ services:
     container_name: alpha7
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alpha7.rule=PathPrefix(`/v0.1.0-alpha7`)"
+      - "traefik.http.routers.alpha7.rule=PathPrefix(`/v0.1.0-alpha.7`)"
       - "traefik.http.routers.alpha7.middlewares=stripalpha7" 
-      - "traefik.http.middlewares.stripalpha7.stripprefix.prefixes=/v0.1.0-alpha7"
+      - "traefik.http.middlewares.stripalpha7.stripprefix.prefixes=/v0.1.0-alpha.7"
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.7
     restart: unless-stopped
     volumes:
@@ -96,9 +96,9 @@ services:
     container_name: alpha6
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alpha6.rule=PathPrefix(`/v0.1.0-alpha6`)"
+      - "traefik.http.routers.alpha6.rule=PathPrefix(`/v0.1.0-alpha.6`)"
       - "traefik.http.routers.alpha6.middlewares=stripalpha6" 
-      - "traefik.http.middlewares.stripalpha6.stripprefix.prefixes=/v0.1.0-alpha6"
+      - "traefik.http.middlewares.stripalpha6.stripprefix.prefixes=/v0.1.0-alpha.6"
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.6
     restart: unless-stopped
     volumes:
@@ -110,9 +110,9 @@ services:
     container_name: alpha10-sgx
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alpha10-sgx.rule=PathPrefix(`/v0.1.0-alpha10-sgx`)"
+      - "traefik.http.routers.alpha10-sgx.rule=PathPrefix(`/v0.1.0-alpha.10-sgx`)"
       - "traefik.http.routers.alpha10-sgx.middlewares=stripalpha10-sgx" 
-      - "traefik.http.middlewares.stripalpha10-sgx.stripprefix.prefixes=/v0.1.0-alpha10-sgx"
+      - "traefik.http.middlewares.stripalpha10-sgx.stripprefix.prefixes=/v0.1.0-alpha.10-sgx"
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.10
     restart: unless-stopped
     devices:
@@ -129,9 +129,9 @@ services:
     container_name: alpha10
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alpha10.rule=PathPrefix(`/v0.1.0-alpha10`)"
+      - "traefik.http.routers.alpha10.rule=PathPrefix(`/v0.1.0-alpha.10`)"
       - "traefik.http.routers.alpha10.middlewares=stripalpha10" 
-      - "traefik.http.middlewares.stripalpha10.stripprefix.prefixes=/v0.1.0-alpha10"
+      - "traefik.http.middlewares.stripalpha10.stripprefix.prefixes=/v0.1.0-alpha.10"
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.10
     restart: unless-stopped
     volumes:
@@ -143,9 +143,9 @@ services:
     container_name: alpha9-sgx
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.alpha9-sgx.rule=PathPrefix(`/v0.1.0-alpha9-sgx`)"
+      - "traefik.http.routers.alpha9-sgx.rule=PathPrefix(`/v0.1.0-alpha.9-sgx`)"
       - "traefik.http.routers.alpha9-sgx.middlewares=stripalpha9-sgx" 
-      - "traefik.http.middlewares.stripalpha9-sgx.stripprefix.prefixes=/v0.1.0-alpha9-sgx"
+      - "traefik.http.middlewares.stripalpha9-sgx.stripprefix.prefixes=/v0.1.0-alpha.9-sgx"
     image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.9
     restart: unless-stopped
     devices:
