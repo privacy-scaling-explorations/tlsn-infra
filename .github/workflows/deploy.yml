@@ -8,31 +8,38 @@ on:
         default: "PSE_TLSNotary"
         required: true
         type: string
-      backend_env:
-        description: "Environment tag for backend VM (prod or test)"
-        default: "test"
+      env:
+        description: "Deployment environment (prod or test)"
         required: true
-        type: string
-      frontend_env:
-        description: "Environment tag for frontend VM (prod or test)"
         default: "test"
+        type: choice
+        options:
+          - prod
+          - test
+      deploy_target:
+        description: "Choose what to deploy"
         required: true
-        type: string
+        default: "both"
+        type: choice
+        options:
+          - backend
+          - frontend
+          - both
 
 permissions:
   id-token: write
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOURCE_BRANCH: ${{ github.ref_name }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Fail if not on main
-        if: github.ref != 'refs/heads/main'
-        run: |
-          echo "This workflow can only be run from the main branch."
-          exit 1
-
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -43,6 +50,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Validate environment and branch constraints
+        run: |
+          if [[ "${{ inputs.env }}" == "prod" && "${{ github.ref_name }}" != "main" ]]; then
+            echo "Deployment to 'prod' is only allowed from the main branch."
+            exit 1
+          fi
+          echo "Environment and branch check passed."
+
       #######################################
       # BACKEND VM
       #######################################
@@ -51,7 +66,7 @@ jobs:
         id: find-backend-vm
         run: |
           RESOURCE_GROUP="${{ inputs.resource_group_name }}"
-          ENV="${{ inputs.backend_env }}"
+          ENV="${{ inputs.env }}"
           QUERY="[?tags.env=='$ENV' && tags.role=='backend'].name"
           VM_NAME=$(az vm list --resource-group "$RESOURCE_GROUP" --query "$QUERY" -o tsv | head -n 1)
 
@@ -64,7 +79,7 @@ jobs:
           echo "Matched Backend VM: $VM_NAME"
 
       - name: Deploy Compose to Backend VM
-        if: env.BACKEND_VM_NAME != ''
+        if: env.BACKEND_VM_NAME != '' && (inputs.deploy_target == 'backend' || inputs.deploy_target == 'both')
         run: |
           az vm run-command create \
             --name "backend-${{ github.run_id }}" \
@@ -76,9 +91,14 @@ jobs:
               cd /home/azureuser/notaries
               docker compose -f docker-compose.yml down || true
               rm -rf *
-              git clone https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
+
+              BRANCH=\"${{ env.SOURCE_BRANCH }}\"
+              echo \"Using branch: \$BRANCH\"
+              git clone --branch \$BRANCH https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
               cp -rp /var/tmp/tlsn-infra/docker/* .
-              docker compose -f docker-compose.yml up -d
+              ./fetch-fixtures.sh notaries-private-keys
+              docker compose pull
+              docker compose -f docker-compose.yml up -d --remove-orphans
             '" 
 
           OUTPUT=$(az vm run-command show \
@@ -113,7 +133,7 @@ jobs:
         id: find-frontend-vm
         run: |
           RESOURCE_GROUP="${{ inputs.resource_group_name }}"
-          ENV="${{ inputs.frontend_env }}"
+          ENV="${{ inputs.env }}"
           QUERY="[?tags.env=='$ENV' && tags.role=='frontend'].name"
           VM_NAME=$(az vm list --resource-group "$RESOURCE_GROUP" --query "$QUERY" -o tsv | head -n 1)
 
@@ -126,7 +146,7 @@ jobs:
           echo "Matched Frontend VM: $VM_NAME"
 
       - name: Deploy landing page
-        if: env.FRONTEND_VM_NAME != ''
+        if: env.FRONTEND_VM_NAME != '' && (inputs.deploy_target == 'frontend' || inputs.deploy_target == 'both')
         run: |
          az vm run-command create \
            --name "frontend-${{ github.run_id }}" \
@@ -135,7 +155,10 @@ jobs:
            --script "bash -c '
              set -euo pipefail
              rm -rf /var/tmp/tlsn-infra
-             git clone https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
+
+             BRANCH=\"${{ env.SOURCE_BRANCH }}\"
+             echo \"Using branch: \$BRANCH\" 
+             git clone --branch \$BRANCH https://github.com/privacy-scaling-explorations/tlsn-infra.git /var/tmp/tlsn-infra
              cp /var/tmp/tlsn-infra/proxy/index.html /var/www/html/
            '" 
 
