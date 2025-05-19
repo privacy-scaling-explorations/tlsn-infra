@@ -7,7 +7,7 @@ services:
       - "--log.level=TRACE"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.defaultRule=Host(`notary-drill.pse.dev`) && PathPrefix(`/{{ normalize (index .Labels \"com.docker.compose.service\") }}`)"
+      - "--providers.docker.defaultRule=Host(`notary.pse.dev`) && PathPrefix(`/{{ normalize (index .Labels \"com.docker.compose.service\") }}`)"
       - "--entrypoints.web.address=:80"
       - "--api.insecure=true"
       - "--api.dashboard=true"
