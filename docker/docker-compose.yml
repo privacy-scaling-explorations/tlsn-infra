@@ -106,6 +106,37 @@ services:
       - "./alpha6/config:/root/.notary-server/config"
     ports:
       - "4001:7047"
+  alpha11-sgx:
+    container_name: alpha11-sgx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alpha11-sgx.rule=PathPrefix(`/v0.1.0-alpha.11-sgx`)"
+      - "traefik.http.routers.alpha11-sgx.middlewares=stripalpha11-sgx"
+      - "traefik.http.middlewares.stripalpha11-sgx.stripprefix.prefixes=/v0.1.0-alpha.11-sgx"
+    image: ghcr.io/tlsnotary/tlsn/notary-server-sgx:v0.1.0-alpha.11
+    restart: unless-stopped
+    devices:
+      - /dev/sgx_enclave
+      - /dev/sgx_provision
+    volumes:
+      - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+    ports:
+      - "4111:7047"
+    environment:
+      - NS_CONCURRENCY:2
+  alpha11:
+    container_name: alpha11
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alpha11.rule=PathPrefix(`/v0.1.0-alpha.11`)"
+      - "traefik.http.routers.alpha11.middlewares=stripalpha11"
+      - "traefik.http.middlewares.stripalpha11.stripprefix.prefixes=/v0.1.0-alpha.11"
+    image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.11
+    restart: unless-stopped
+    ports:
+      - "4011:7047"
+    environment:
+      - NS_CONCURRENCY:10
   alpha10-sgx:
     container_name: alpha10-sgx
     labels:
