@@ -121,7 +121,7 @@ services:
     volumes:
       - /var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
     ports:
-      - "4110:7047"
+      - "4111:7047"
     environment:
       - NS_CONCURRENCY:2
   alpha11:
@@ -134,7 +134,7 @@ services:
     image: ghcr.io/tlsnotary/tlsn/notary-server:v0.1.0-alpha.11
     restart: unless-stopped
     ports:
-      - "4010:7047"
+      - "4011:7047"
     environment:
       - NS_CONCURRENCY:10
   alpha10-sgx:
